@@ -47,19 +47,37 @@ def calculate_ease(config_settings, card_settings, leashed=True):
         average_ease = moving_average(factor_list, weight)
     else:
         average_ease = starting_ease_factor
-    suggested_factor = int(round(average_ease * delta_ratio))
+    suggested_factor = average_ease * delta_ratio
     if leashed:
-        # anchor this to current_ease_factor initially
-        number_of_reviews = len(review_list)
-        ease_cap = min(max_ease, (current_ease_factor
-                       + (leash * number_of_reviews)))
-        if suggested_factor > ease_cap:
-            suggested_factor = ease_cap
-        ease_floor = max(min_ease, (current_ease_factor
-                         - (leash * number_of_reviews)))
-        if suggested_factor < ease_floor:
-            suggested_factor = ease_floor
-    return suggested_factor
+        review_number_multiplier = 1 + (len(review_list) / 10)
+
+        # allow smaller adjustments the closer we are to max_ease/min_ease
+        if suggested_factor > starting_ease_factor:
+            # make smaller adjustments above starting_ease_factor than below
+            leash_multiplier = (((max_ease / current_ease_factor) ** (1/3))
+                * ((suggested_factor / starting_ease_factor) ** (1/4))
+                * (1 - current_ease_factor / max_ease)
+                * (starting_ease_factor / current_ease_factor))
+
+            ease_cap = min(
+                max_ease, 
+                (current_ease_factor + (
+                    leash * leash_multiplier * review_number_multiplier)))
+            if suggested_factor > ease_cap:
+                suggested_factor = ease_cap
+
+        if suggested_factor < starting_ease_factor:
+            leash_multiplier = ((current_ease_factor / min_ease - 1)
+                * ((starting_ease_factor / suggested_factor) ** (1/3))
+                * (current_ease_factor / starting_ease_factor))
+
+            ease_floor = max(
+                min_ease,
+                (current_ease_factor - (leash * leash_multiplier * review_number_multiplier))
+                )
+            if suggested_factor < ease_floor:
+                suggested_factor = ease_floor
+    return int(round(suggested_factor))
 
 
 def calculate_all(config_settings, card_settings):

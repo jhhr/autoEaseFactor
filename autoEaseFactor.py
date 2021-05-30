@@ -77,12 +77,17 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, leashed=True):
 
     """Wraps calculate_ease()"""
     card_settings = {}
+    card_settings['is_review_card'] = card.type == 2
     if reviews_only:
         card_settings['review_list'] = get_reviews_only(card)
     else:
         card_settings['review_list'] = get_all_reps(card)
     if new_answer is not None:
-        card_settings['review_list'].append(new_answer)
+        append_answer = new_answer
+        # Use hard answers during review to make a one-time drop in factor
+        if card.type == 2 and append_answer == 2:
+            append_answer = 1
+        card_settings['review_list'].append(append_answer)
     card_settings['factor_list'] = get_ease_factors(card)
     # Ignore latest ease if you are applying algorithm from deck settings
     if new_answer is None and len(card_settings['factor_list']) > 1:
