@@ -5,3 +5,4 @@ roadmap.*
 share_addon.txt
 __pycache__/*
 .git/*
+meta.json
