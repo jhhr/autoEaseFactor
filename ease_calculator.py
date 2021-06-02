@@ -25,11 +25,10 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
     review_list = card_settings['review_list']
     factor_list = card_settings['factor_list']
-
-    if factor_list is not None and len(factor_list) > 0:
-        current_ease_factor = factor_list[-1]
-    else:
+    current_ease_factor = card_settings['current_factor']
+    if type(current_ease_factor) != 'int':
         current_ease_factor = starting_ease_factor
+
     # if no reviews, just assume we're on target
     if review_list is None or len(review_list) < 1:
         success_rate = target

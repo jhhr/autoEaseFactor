@@ -59,6 +59,9 @@ def get_ease_factors(card=mw.reviewer.card):
                           " and factor > 0 and type IN (0, 1, 2, 3)",
                           card.id)
 
+def get_current_factor(card=mw.reviewer.card):
+    return mw.col.db.list("select factor from cards where id = ?", card.id)
+
 
 def get_starting_ease(card=mw.reviewer.card):
     deck_id = card.did
@@ -77,6 +80,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, leashed=True):
 
     """Wraps calculate_ease()"""
     card_settings = {}
+    card_settings['current_factor'] = get_current_factor(card)
     card_settings['is_review_card'] = card.type == 2
     if reviews_only:
         card_settings['review_list'] = get_reviews_only(card)
