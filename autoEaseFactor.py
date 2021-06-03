@@ -60,7 +60,7 @@ def get_ease_factors(card=mw.reviewer.card):
                           card.id)
 
 def get_current_factor(card=mw.reviewer.card):
-    return mw.col.db.list("select factor from cards where id = ?", card.id)
+    return mw.col.db.list("select factor from cards where id = ?", card.id)[0]
 
 
 def get_starting_ease(card=mw.reviewer.card):
@@ -135,7 +135,7 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
         for rep_result in truncated_rep_list[1:]:
             printable_rep_list += ", " + str(rep_result)
     if factor_list and len(factor_list) > 0:
-        last_factor = factor_list[-1]
+        last_factor = get_current_factor(card)
     else:
         last_factor = None
     card_types = {0: "new", 1: "learn", 2: "review", 3: "relearn"}
