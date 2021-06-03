@@ -1,6 +1,5 @@
 import math
 
-
 def moving_average(value_list, weight, init=None):
     """Provide (float) weighted moving average for list of values."""
     assert len(value_list) > 0
@@ -13,6 +12,16 @@ def moving_average(value_list, weight, init=None):
         mavg += this_item * weight
     return mavg
 
+def get_success_rate(review_list, weight, init):
+    # Define hard answers as halfway between a failure and success
+    rev_success_map = {
+        1: 0,
+        2: 0.5,
+        3: 1,
+        4: 1,
+    }
+    success_list = [rev_success_map[_] for _ in review_list]
+    return moving_average(success_list, weight, init)
 
 def calculate_ease(config_settings, card_settings, leashed=True):
     """Return next ease factor based on config and card performance."""
@@ -33,8 +42,7 @@ def calculate_ease(config_settings, card_settings, leashed=True):
     if review_list is None or len(review_list) < 1:
         success_rate = target
     else:
-        success_list = [int(_ > 1) for _ in review_list]
-        success_rate = moving_average(success_list, weight, init=target)
+        success_rate = get_success_rate(review_list, weight, init=target)
 
     # Ebbinghaus formula
     if success_rate > 0.99:
@@ -43,10 +51,16 @@ def calculate_ease(config_settings, card_settings, leashed=True):
         success_rate = 0.01
     delta_ratio = math.log(target) / math.log(success_rate)
     if factor_list and len(factor_list) > 0:
+        last_factor = factor_list[-1]
+        # When factor has been modified without doing a review
+        # make the average_ease equal to current factor
+        if last_factor != current_ease_factor:
+            average_ease = current_ease_factor
         average_ease = moving_average(factor_list, weight)
     else:
         average_ease = starting_ease_factor
     suggested_factor = average_ease * delta_ratio
+
     if leashed:
         review_number_multiplier = 1 + (len(review_list) / 10)
 
@@ -76,6 +90,7 @@ def calculate_ease(config_settings, card_settings, leashed=True):
                 )
             if suggested_factor < ease_floor:
                 suggested_factor = ease_floor
+
     return int(round(suggested_factor))
 
 

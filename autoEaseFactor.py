@@ -115,8 +115,7 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
     if rep_list is None or len(rep_list) < 1:
         success_rate = target
     else:
-        success_list = [int(_ > 1) for _ in rep_list]
-        success_rate = ease_calculator.moving_average(success_list,
+        success_rate = ease_calculator.get_success_rate(rep_list,
                                                       weight, init=target)
     if factor_list and len(factor_list) > 0:
         average_ease = ease_calculator.moving_average(factor_list, weight)
@@ -135,9 +134,11 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
         for rep_result in truncated_rep_list[1:]:
             printable_rep_list += ", " + str(rep_result)
     if factor_list and len(factor_list) > 0:
-        last_factor = get_current_factor(card)
+        last_factor = factor_list[-1]
     else:
         last_factor = None
+    current_factor = get_current_factor(card)
+    delta_ratio = math.log(target) / math.log(success_rate)
     card_types = {0: "new", 1: "learn", 2: "review", 3: "relearn"}
     queue_types = {0: "new",
                    1: "relearn",
@@ -152,8 +153,14 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
     msg += (f"Card Queue (Type): {queue_types[card.queue]}"
             f" ({card_types[card.type]})<br>")
     msg += f"MAvg success rate: {round(success_rate, 4)}<br>"
-    msg += f"Last factor: {last_factor}<br>"
     msg += f"MAvg factor: {round(average_ease, 2)}<br>"
+    msg += f""" (delta: {round(delta_ratio, 2)})<br>"""
+    if last_factor == current_factor:
+        msg += f"Last factor: {last_factor}<br>"
+    else:
+        msg += f"Last factor: {last_factor}"
+        msg += f"(current: {current_factor})<br>"
+        
     if card.queue != 2 and reviews_only:
         msg += f"New factor: NONREVIEW, NO CHANGE<br>"
     else:
