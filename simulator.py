@@ -45,7 +45,7 @@ def launch_simulator():
                            'if recalculating ease history', size=(10, 1)),
                   PySGQt.Input('2500 1900 1700', tooltip='If recalculting'
                                ' history, starting ease factor will be taken'
-                               ' from first value', key='factors')],
+                               ' from current deck starting ease', key='factors')],
               [PySGQt.Checkbox('Recalculate Ease History', default=True,
                                key='recalculate')],
               [PySGQt.Text('_'*40)],

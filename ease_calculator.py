@@ -34,8 +34,9 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
     review_list = card_settings['review_list']
     factor_list = card_settings['factor_list']
-    current_ease_factor = card_settings['current_factor']
-    if type(current_ease_factor) != 'int':
+    if factor_list is not None and len(factor_list) > 0:
+        current_ease_factor = factor_list[-1]
+    else:
         current_ease_factor = starting_ease_factor
 
     # if no reviews, just assume we're on target
@@ -51,11 +52,6 @@ def calculate_ease(config_settings, card_settings, leashed=True):
         success_rate = 0.01
     delta_ratio = math.log(target) / math.log(success_rate)
     if factor_list and len(factor_list) > 0:
-        last_factor = factor_list[-1]
-        # When factor has been modified without doing a review
-        # make the average_ease equal to current factor
-        if last_factor != current_ease_factor:
-            average_ease = current_ease_factor
         average_ease = moving_average(factor_list, weight)
     else:
         average_ease = starting_ease_factor
@@ -96,7 +92,7 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
 def calculate_all(config_settings, card_settings):
     """Recalculate all ease factors based on config and answers."""
-    new_factor_list = [card_settings['factor_list'][0]]
+    new_factor_list = [config_settings['starting_ease_factor']]
     for count in range(1, 1 + len(card_settings['review_list'])):
         tmp_review_list = card_settings['review_list'][:count]
         tmp_card_settings = {'review_list': tmp_review_list,

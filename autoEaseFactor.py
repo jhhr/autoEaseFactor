@@ -59,9 +59,6 @@ def get_ease_factors(card=mw.reviewer.card):
                           " and factor > 0 and type IN (0, 1, 2, 3)",
                           card.id)
 
-def get_current_factor(card=mw.reviewer.card):
-    return mw.col.db.list("select factor from cards where id = ?", card.id)[0]
-
 
 def get_starting_ease(card=mw.reviewer.card):
     deck_id = card.did
@@ -75,12 +72,12 @@ def get_starting_ease(card=mw.reviewer.card):
     return deck_starting_ease
 
 
-def suggested_factor(card=mw.reviewer.card, new_answer=None, leashed=True):
+def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=None, leashed=True):
     """Loads card history from anki and returns suggested factor"""
 
     """Wraps calculate_ease()"""
     card_settings = {}
-    card_settings['current_factor'] = get_current_factor(card)
+    card_settings['id'] = card.id
     card_settings['is_review_card'] = card.type == 2
     if reviews_only:
         card_settings['review_list'] = get_reviews_only(card)
@@ -92,7 +89,10 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, leashed=True):
         if card.type == 2 and append_answer == 2:
             append_answer = 1
         card_settings['review_list'].append(append_answer)
-    card_settings['factor_list'] = get_ease_factors(card)
+    factor_list = get_ease_factors(card)
+    if factor_list is not None and len(factor_list) > 0:
+        factor_list[-1] = prev_card_factor
+    card_settings['factor_list'] = factor_list
     # Ignore latest ease if you are applying algorithm from deck settings
     if new_answer is None and len(card_settings['factor_list']) > 1:
         card_settings['factor_list'] = card_settings['factor_list'][:-1]
@@ -104,7 +104,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, leashed=True):
                                           leashed)
 
 
-def get_stats(card=mw.reviewer.card, new_answer=None):
+def get_stats(card=mw.reviewer.card, new_answer=None, prev_card_factor=None):
     rep_list = get_all_reps(card)
     if new_answer:
         rep_list.append(new_answer)
@@ -134,10 +134,9 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
         for rep_result in truncated_rep_list[1:]:
             printable_rep_list += ", " + str(rep_result)
     if factor_list and len(factor_list) > 0:
-        last_factor = factor_list[-1]
+        last_rev_factor = factor_list[-1]
     else:
-        last_factor = None
-    current_factor = get_current_factor(card)
+        last_rev_factor = None
     delta_ratio = math.log(target) / math.log(success_rate)
     card_types = {0: "new", 1: "learn", 2: "review", 3: "relearn"}
     queue_types = {0: "new",
@@ -155,17 +154,17 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
     msg += f"MAvg success rate: {round(success_rate, 4)}<br>"
     msg += f"MAvg factor: {round(average_ease, 2)}<br>"
     msg += f""" (delta: {round(delta_ratio, 2)})<br>"""
-    if last_factor == current_factor:
-        msg += f"Last factor: {last_factor}<br>"
+    if last_rev_factor == prev_card_factor:
+        msg += f"Last rev factor: {last_rev_factor}<br>"
     else:
-        msg += f"Last factor: {last_factor}"
-        msg += f"(current: {current_factor})<br>"
+        msg += f"Last rev factor: {last_rev_factor}"
+        msg += f" (actual: {prev_card_factor})<br>"
         
     if card.queue != 2 and reviews_only:
         msg += f"New factor: NONREVIEW, NO CHANGE<br>"
     else:
-        new_factor = suggested_factor(card, new_answer)
-        unleashed_factor = suggested_factor(card, new_answer, leashed=False)
+        new_factor = suggested_factor(card, new_answer, prev_card_factor)
+        unleashed_factor = suggested_factor(card, new_answer, prev_card_factor, leashed=False,)
         if new_factor == unleashed_factor:
             msg += f"New factor: {new_factor}<br>"
         else:
@@ -175,9 +174,9 @@ def get_stats(card=mw.reviewer.card, new_answer=None):
     return msg
 
 
-def display_stats(new_answer=None):
+def display_stats(new_answer=None, prev_card_factor=None):
     card = mw.reviewer.card
-    msg = get_stats(card, new_answer)
+    msg = get_stats(card, new_answer, prev_card_factor)
     tooltip_args = {'msg': msg, 'period': stats_duration}
     if semver.Version(version) > semver.Version("2.1.30"):
         tooltip_args.update({'x_offset': 12, 'y_offset': 240})
@@ -189,10 +188,11 @@ def adjust_factor(ease_tuple,
                   card=mw.reviewer.card):
     assert card is not None
     new_answer = ease_tuple[1]
+    prev_card_factor = card.factor
     if card.queue == 2 or not reviews_only:
-        card.factor = suggested_factor(card, new_answer)
+        card.factor = suggested_factor(card, new_answer, prev_card_factor)
     if stats_enabled:
-        display_stats(new_answer)
+        display_stats(new_answer, prev_card_factor)
     return ease_tuple
 
 
