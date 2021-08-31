@@ -85,9 +85,6 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
         card_settings['review_list'] = get_all_reps(card)
     if new_answer is not None:
         append_answer = new_answer
-        # Use hard answers during review to make a one-time drop in factor
-        if card.type == 2 and append_answer == 2:
-            append_answer = 1
         card_settings['review_list'].append(append_answer)
     factor_list = get_ease_factors(card)
     if factor_list is not None and len(factor_list) > 0:
