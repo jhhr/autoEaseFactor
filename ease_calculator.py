@@ -35,8 +35,10 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
     review_list = card_settings['review_list']
     factor_list = card_settings['factor_list']
-    if factor_list is not None and len(factor_list) > 0:
-        current_ease_factor = factor_list[-1]
+    valid_factor_list = [x for x in factor_list if x is not None] if factor_list else []
+
+    if len(valid_factor_list) > 0:
+        current_ease_factor = valid_factor_list[-1]
     else:
         current_ease_factor = starting_ease_factor
 
@@ -52,14 +54,16 @@ def calculate_ease(config_settings, card_settings, leashed=True):
     if success_rate < 0.01:
         success_rate = 0.01
     delta_ratio = math.log(target) / math.log(success_rate)
-    if factor_list and len(factor_list) > 0:
-        average_ease = moving_average(factor_list, weight)
+
+    if len(valid_factor_list) > 0:
+        average_ease = moving_average(valid_factor_list, weight)
     else:
         average_ease = starting_ease_factor
     suggested_factor = average_ease * delta_ratio
 
+    if leashed:
     # factor will increase
-    up_leash_multiplier =  (((max_ease / current_ease_factor) ** (1/3))
+        up_leash_multiplier =  (((max_ease / current_ease_factor) ** (1/3))
                 # suggested_factor distance from starting ease increases multiplier slightly
                 * ((suggested_factor / starting_ease_factor) ** (1/4))
                 # Smaller multiplier the closer we are to max ease
@@ -68,19 +72,19 @@ def calculate_ease(config_settings, card_settings, leashed=True):
                 * (starting_ease_factor / current_ease_factor))
 
     # factor will decrease
-    down_leash_multiplier = ((current_ease_factor / min_ease - 1)
+        down_leash_multiplier = ((current_ease_factor / min_ease - 1)
                 # suggested_factor distance from starting ease increases multiplier slightly
                 * ((starting_ease_factor / suggested_factor) ** (1/3))
                 # Smaller multiplier when below starting ease
                 * (current_ease_factor / starting_ease_factor))
 
-    if leashed:
         ease_cap = min(
             max_ease, 
             (current_ease_factor + (
                 leash * up_leash_multiplier)))
         if suggested_factor > ease_cap:
             suggested_factor = ease_cap
+            
         ease_floor = max(
             min_ease,
             (current_ease_factor - (leash * down_leash_multiplier))
