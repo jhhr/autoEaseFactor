@@ -37,6 +37,7 @@ def calculate_ease(config_settings, card_settings, leashed=True):
     factor_list = card_settings['factor_list']
     valid_factor_list = [x for x in factor_list if x is not None] if factor_list else []
 
+    current_ease_factor = None
     if len(valid_factor_list) > 0:
         current_ease_factor = valid_factor_list[-1]
     ## If value wasn't set or was set to zero for some reason, use starting ease
