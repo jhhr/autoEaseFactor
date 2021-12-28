@@ -17,12 +17,19 @@ def get_success_rate(review_list, weight, init):
     rev_success_map = {
         0: 0,
         1: 0.4,
-        2: 0.8,
+        2: 0.7,
         3: 1,
-        4: 1.1,
+        4: 1.2,
     }
     success_list = [rev_success_map[_] for _ in review_list]
     return moving_average(success_list, weight, init)
+
+# Offset the v2 scheduler factor changes
+def get_factor_offset(answer):
+    if answer is not None:
+        return [200,150,0,-150][answer - 1]
+    else:
+        return 0
 
 def calculate_ease(config_settings, card_settings, leashed=True):
     """Return next ease factor based on config and card performance."""
@@ -47,8 +54,10 @@ def calculate_ease(config_settings, card_settings, leashed=True):
     # if no reviews, just assume we're on target
     if review_list is None or len(review_list) < 1:
         success_rate = target
+        factor_offset = 0
     else:
         success_rate = get_success_rate(review_list, weight, init=target)
+        factor_offset = get_factor_offset(review_list[-1])
 
     # Ebbinghaus formula
     if success_rate > 0.99:
@@ -72,6 +81,7 @@ def calculate_ease(config_settings, card_settings, leashed=True):
                 * (1 - current_ease_factor / max_ease)
                 # Higher multiplier when below starting ease
                 * (starting_ease_factor / current_ease_factor))
+        #up_leash = min(leash, leash * up_leash_multiplier)
 
     # factor will decrease
         down_leash_multiplier = ((current_ease_factor / min_ease - 1)
@@ -82,19 +92,19 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
         ease_cap = min(
             max_ease, 
-            (current_ease_factor + (
-                leash * up_leash_multiplier)))
+            (current_ease_factor + leash * up_leash_multiplier)
+            )
         if suggested_factor > ease_cap:
             suggested_factor = ease_cap
             
         ease_floor = max(
             min_ease,
-            (current_ease_factor - (leash * down_leash_multiplier))
+            (current_ease_factor - leash * down_leash_multiplier)
             )
         if suggested_factor < ease_floor:
             suggested_factor = ease_floor
 
-    return int(round(suggested_factor))
+    return int(round(suggested_factor + factor_offset))
 
 
 def calculate_all(config_settings, card_settings):
