@@ -16,10 +16,10 @@ def get_success_rate(review_list, weight, init):
     # Define hard answers as halfway between a failure and success
     rev_success_map = {
         0: 0,
-        1: 0.4,
-        2: 0.7,
+        1: 0,
+        2: 0.5,
         3: 1,
-        4: 1.2,
+        4: 1.25,
     }
     success_list = [rev_success_map[_] for _ in review_list]
     return moving_average(success_list, weight, init)
