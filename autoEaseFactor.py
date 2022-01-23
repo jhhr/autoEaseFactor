@@ -65,7 +65,7 @@ def get_starting_ease(card=mw.reviewer.card):
     if card.odid:
         deck_id = card.odid
     try:
-        deck_starting_ease = mw.col.decks.confForDid(
+        deck_starting_ease = mw.col.decks.config_dict_for_deck_id(
                 deck_id)['new']['initialFactor']
     except KeyError:
         deck_starting_ease = 2500
