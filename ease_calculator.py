@@ -24,7 +24,7 @@ def get_success_rate(review_list, weight, init):
     success_list = [rev_success_map[_] for _ in review_list]
     return moving_average(success_list, weight, init)
 
-# Offset the v2 scheduler factor changes
+# Offset the v3 scheduler factor changes, only use if using v3!
 def get_factor_offset(answer):
     if answer is not None:
         return [200,150,0,-150][answer - 1]
@@ -54,10 +54,10 @@ def calculate_ease(config_settings, card_settings, leashed=True):
     # if no reviews, just assume we're on target
     if review_list is None or len(review_list) < 1:
         success_rate = target
-        factor_offset = 0
+        # factor_offset = 0
     else:
         success_rate = get_success_rate(review_list, weight, init=target)
-        factor_offset = get_factor_offset(review_list[-1])
+        # factor_offset = get_factor_offset(review_list[-1])
 
     # Ebbinghaus formula
     if success_rate > 0.99:
@@ -103,8 +103,9 @@ def calculate_ease(config_settings, card_settings, leashed=True):
             )
         if suggested_factor < ease_floor:
             suggested_factor = ease_floor
-
-    return int(round(suggested_factor + factor_offset))
+        
+    # return int(round(suggested_factor + factor_offset))
+    return int(round(suggested_factor))
 
 
 def calculate_all(config_settings, card_settings):
