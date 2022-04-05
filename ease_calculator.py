@@ -97,13 +97,17 @@ def calculate_ease(config_settings, card_settings, leashed=True, is_deck_adjustm
             max_ease, 
             (current_ease_factor + leash * up_leash_multiplier)
             )
+
         if suggested_factor > ease_cap:
             suggested_factor = ease_cap
             
-        ease_floor = max(
-            min_ease,
-            (current_ease_factor - leash * down_leash_multiplier)
-            )
+        ease_floor = min(
+            max(
+                min_ease,
+                (current_ease_factor - leash * down_leash_multiplier)
+            ),
+            ease_cap
+        )
         if suggested_factor < ease_floor:
             suggested_factor = ease_floor
         
