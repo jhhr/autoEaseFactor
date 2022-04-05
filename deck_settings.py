@@ -28,7 +28,7 @@ def adjust_ease_factors(deck_id):
     card_ids = mw.col.find_cards(f'deck:"{deck_name}"')
     for card_id in card_ids:
         card = mw.col.getCard(card_id)
-        card.factor = autoEaseFactor.suggested_factor(card)
+        card.factor = autoEaseFactor.suggested_factor(card=card, is_deck_adjustment=True)
         card.flush()
     announce("Ease adjustment complete!")
 

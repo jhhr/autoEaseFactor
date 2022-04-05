@@ -72,7 +72,7 @@ def get_starting_ease(card=mw.reviewer.card):
     return deck_starting_ease
 
 
-def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=None, leashed=True):
+def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=None, leashed=True, is_deck_adjustment=False):
     """Loads card history from anki and returns suggested factor"""
 
     """Wraps calculate_ease()"""
@@ -98,7 +98,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
     config_settings['starting_ease_factor'] = deck_starting_ease
 
     return ease_calculator.calculate_ease(config_settings, card_settings,
-                                          leashed)
+                                          leashed, is_deck_adjustment)
 
 
 def get_stats(card=mw.reviewer.card, new_answer=None, prev_card_factor=None):
