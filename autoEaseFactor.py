@@ -48,6 +48,10 @@ def get_all_reps(card=mw.reviewer.card):
     return mw.col.db.list("select ease from revlog where cid = ? and "
                           "type IN (0, 1, 2, 3)", card.id)
 
+def get_all_reps_with_ids(card=mw.reviewer.card):
+    return mw.col.db.all("select id, ease from revlog where cid = ? and "
+                          "type IN (0, 1, 2, 3)", card.id)
+
 
 def get_reviews_only(card=mw.reviewer.card):
     return mw.col.db.list(("select ease from revlog where type = 1"
@@ -75,10 +79,23 @@ def get_starting_ease(card=mw.reviewer.card):
 def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=None, leashed=True, is_deck_adjustment=False):
     """Loads card history from anki and returns suggested factor"""
 
-    """Wraps calculate_ease()"""
+    deck_starting_ease = get_starting_ease(card)
+    config_settings['starting_ease_factor'] = deck_starting_ease
+
+    # Wraps calculate_ease()
     card_settings = {}
     card_settings['id'] = card.id
     card_settings['is_review_card'] = card.type == 2
+    if is_deck_adjustment:
+        all_reps = get_all_reps_with_ids(card)
+        card_settings['factor_list'] = [deck_starting_ease]
+        for i in range(len(all_reps)):
+            rep_id = all_reps[i][0]
+            card_settings['review_list'] = [_[1] for _ in all_reps[0:i]]
+            new_factor = ease_calculator.calculate_ease(config_settings, card_settings,
+                                          leashed)
+            mw.col.db.execute("update revlog set factor = ? where id = ?", new_factor, rep_id)
+            card_settings['factor_list'].append(new_factor)
     if reviews_only:
         card_settings['review_list'] = get_reviews_only(card)
     else:
@@ -94,11 +111,9 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
     if new_answer is None and len(card_settings['factor_list']) > 1:
         card_settings['factor_list'] = card_settings['factor_list'][:-1]
 
-    deck_starting_ease = get_starting_ease(card)
-    config_settings['starting_ease_factor'] = deck_starting_ease
 
     return ease_calculator.calculate_ease(config_settings, card_settings,
-                                          leashed, is_deck_adjustment)
+                                          leashed)
 
 
 def get_stats(card=mw.reviewer.card, new_answer=None, prev_card_factor=None):

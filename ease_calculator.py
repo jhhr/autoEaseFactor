@@ -31,7 +31,7 @@ def get_factor_offset(answer):
     else:
         return 0
 
-def calculate_ease(config_settings, card_settings, leashed=True, is_deck_adjustment=False):
+def calculate_ease(config_settings, card_settings, leashed=True):
     """Return next ease factor based on config and card performance."""
     leash = config_settings['leash']
     target = config_settings['target']
@@ -43,10 +43,6 @@ def calculate_ease(config_settings, card_settings, leashed=True, is_deck_adjustm
     review_list = card_settings['review_list']
     factor_list = card_settings['factor_list']
     valid_factor_list = [x for x in factor_list if x is not None] if factor_list else []
-    if is_deck_adjustment and len(valid_factor_list) > 0:
-        first_factor_starting_ease_ratio = valid_factor_list[0] / starting_ease_factor
-        valid_factor_list = [_ / first_factor_starting_ease_ratio for _ in valid_factor_list]
-
     current_ease_factor = None
     if len(valid_factor_list) > 0:
         current_ease_factor = valid_factor_list[-1]
@@ -101,18 +97,15 @@ def calculate_ease(config_settings, card_settings, leashed=True, is_deck_adjustm
         if suggested_factor > ease_cap:
             suggested_factor = ease_cap
             
-        ease_floor = min(
-            max(
+        ease_floor = max(
                 min_ease,
                 (current_ease_factor - leash * down_leash_multiplier)
-            ),
-            ease_cap
-        )
+            )
         if suggested_factor < ease_floor:
             suggested_factor = ease_floor
         
     # return int(round(suggested_factor + factor_offset))
-    return int(round(suggested_factor))
+    return min(max(int(round(suggested_factor)), min_ease), max_ease)
 
 
 def calculate_all(config_settings, card_settings):
