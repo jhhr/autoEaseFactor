@@ -24,7 +24,7 @@ def announce(announcement):
 
 def adjust_ease_factors(deck_id):
     from . import autoEaseFactor
-    deck_name = mw.col.decks.nameOrNone(deck_id)
+    deck_name = mw.col.decks.name_if_exists(deck_id)
     card_ids = mw.col.find_cards(f'deck:"{deck_name}"')
     for card_id in card_ids:
         card = mw.col.getCard(card_id)
@@ -39,7 +39,7 @@ def export_ease_factors(deck_id):
     For some deck `deck_id`, prompts to save a file containing a
     dictionary that links card id keys to ease factors.
     '''
-    deck_name = mw.col.decks.nameOrNone(deck_id)
+    deck_name = mw.col.decks.name_if_exists(deck_id)
     if deck_name is None:
         return
 
@@ -73,7 +73,7 @@ def import_ease_factors(deck_id, factors=None):
     If factors is not provided, prompt user to load a file of ease values,
     such as one saved by `export_ease_factors()`.
     '''
-    deck_name = mw.col.decks.nameOrNone(deck_id)
+    deck_name = mw.col.decks.name_if_exists(deck_id)
     if deck_name is None:
         print("Deck name not found on import_ease_factors, exiting...")
         return
