@@ -2,14 +2,22 @@ import math
 
 def moving_average(value_list, weight, init=None):
     """Provide (float) weighted moving average for list of values."""
+    # Bigger weight
     assert len(value_list) > 0
+
+    value_count = len(value_list)
+    # Weight old reviews more when there are more reviews
+    p = value_count / 50
+    adj_weight = weight
+    if weight > 0.1:
+        adj_weight = min(0.1, weight * (1 - p) + 0.1 * p)
     if init is None:
         mavg = sum(value_list)/len(value_list)
     else:
         mavg = init
     for this_item in value_list:
-        mavg = (mavg * (1 - weight))
-        mavg += this_item * weight
+        mavg = (mavg * (1 - adj_weight))
+        mavg += this_item * adj_weight
     return mavg
 
 def get_success_rate(review_list, weight, init):
@@ -42,6 +50,8 @@ def calculate_ease(config_settings, card_settings, leashed=True):
 
     review_list = card_settings['review_list']
     factor_list = card_settings['factor_list']
+
+
     valid_factor_list = [x for x in factor_list if x is not None] if factor_list else []
     current_ease_factor = None
     if len(valid_factor_list) > 0:

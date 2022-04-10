@@ -75,6 +75,42 @@ def get_starting_ease(card=mw.reviewer.card):
         deck_starting_ease = 2500
     return deck_starting_ease
 
+    
+def get_rev_conf(card=mw.reviewer.card):
+    deck_id = card.did
+    if card.odid:
+        deck_id = card.odid
+    try:
+        deck_easy_fct = mw.col.decks.config_dict_for_deck_id(
+                deck_id)['rev']['ease4']
+        print('deck_easy_fct', deck_easy_fct)
+    except KeyError:
+        deck_easy_fct = 1.3
+    try:
+        deck_hard_fct = mw.col.decks.config_dict_for_deck_id(
+                deck_id)['rev']['hardFactor']
+        print('deck_hard_fct', deck_hard_fct)
+    except KeyError:
+        deck_hard_fct = 1.2
+    try:
+        deck_max_ivl = mw.col.decks.config_dict_for_deck_id(
+                deck_id)['rev']['maxIvl']
+    except KeyError:
+        deck_max_ivl = 3650        
+    try:
+        deck_again_fct = mw.col.decks.config_dict_for_deck_id(
+                deck_id)['lapse']['mult']
+        print('deck_again_fct',deck_again_fct)
+    except KeyError:
+        deck_max_ivl = 0
+    return {
+        'deck_easy_fct': deck_easy_fct,
+        'deck_hard_fct': deck_hard_fct,
+        'deck_max_ivl': deck_max_ivl,
+        'deck_again_fct': deck_again_fct,
+         
+    }
+
 
 def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=None, leashed=True, is_deck_adjustment=False):
     """Loads card history from anki and returns suggested factor"""
@@ -86,6 +122,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
     card_settings = {}
     card_settings['id'] = card.id
     card_settings['is_review_card'] = card.type == 2
+    # If doing deck adjustment, rewrite all past factors in revlog
     if is_deck_adjustment:
         all_reps = get_all_reps_with_ids(card)
         card_settings['factor_list'] = [deck_starting_ease]

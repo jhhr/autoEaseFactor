@@ -25,8 +25,8 @@ of miscalculation are higher.
 
 **moving_average_weight**
 
-- Specifies how much weight to place on more recent reviews over old reviews.
-Note: this is very senstive, values between 0.07 and 0.3 are about right for
+- Specifies how much weight to place on more recent reviews over old reviews. Bigger -> more recent gets more weight. Smaller --> old reviews get more equal weight.
+Note: this is very sensitive, values between 0.07 and 0.3 are about right for
 most people.
 - default: 0.2
 
