@@ -22,10 +22,14 @@ def announce(announcement):
     msg.exec_()
 
 
-def adjust_ease_factors(deck_id):
+def adjust_ease_factors(deck_id, studied_only=False):
     from . import autoEaseFactor
     deck_name = mw.col.decks.name_if_exists(deck_id)
-    card_ids = mw.col.find_cards(f'deck:"{deck_name}"')
+    query = f'deck:"{deck_name}"'
+    if studied_only:
+        query += ' rated:1'
+    card_ids = mw.col.find_cards(query)
+    
     for card_id in card_ids:
         card = mw.col.getCard(card_id)
         card.factor = autoEaseFactor.suggested_factor(card=card, is_deck_adjustment=True)
@@ -103,9 +107,12 @@ def add_deck_options(menu, deck_id):
     import_action = menu.addAction("Import Ease Factors (AEF)")
     import_action.triggered.connect(lambda _,
                                     did=deck_id: import_ease_factors(did))
-    adjust_action = menu.addAction("Adjust Ease Factors To Performance")
+    adjust_action = menu.addAction("Adjust Ease Factors To Performance - Whole deck")
     adjust_action.triggered.connect(lambda _,
                                     did=deck_id: adjust_ease_factors(did))
+    adjust_action = menu.addAction("Adjust Ease Factors To Performance - Only studied today")
+    adjust_action.triggered.connect(lambda _,
+                                    did=deck_id: adjust_ease_factors(did, True))
 
 
 gui_hooks.deck_browser_will_show_options_menu.append(add_deck_options)
