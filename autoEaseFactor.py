@@ -75,7 +75,7 @@ def get_starting_ease(card=mw.reviewer.card):
         deck_starting_ease = 2500
     return deck_starting_ease
 
-    
+
 def get_rev_conf(card=mw.reviewer.card):
     deck_id = card.did
     if card.odid:
