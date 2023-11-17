@@ -13,13 +13,8 @@ from anki.lang import _
 
 
 # add on utilities
-from . import ease_calculator
-from . import semver
+from .ease_calculator import calculate_ease, get_success_rate, moving_average
 
-if semver.Version(version) >= semver.Version("2.1.26"):
-    from . import deck_settings
-    # window vs. widget error
-    # from . import menu_action
 
 config = mw.addonManager.getConfig(__name__)
 
@@ -129,7 +124,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
         for i in range(len(all_reps)):
             rep_id = all_reps[i][0]
             card_settings['review_list'] = [_[1] for _ in all_reps[0:i]]
-            new_factor = ease_calculator.calculate_ease(config_settings, card_settings,
+            new_factor = calculate_ease(config_settings, card_settings,
                                           leashed)
             mw.col.db.execute("update revlog set factor = ? where id = ?", new_factor, rep_id)
             card_settings['factor_list'].append(new_factor)
@@ -149,7 +144,7 @@ def suggested_factor(card=mw.reviewer.card, new_answer=None, prev_card_factor=No
         card_settings['factor_list'] = card_settings['factor_list'][:-1]
 
 
-    return ease_calculator.calculate_ease(config_settings, card_settings,
+    return calculate_ease(config_settings, card_settings,
                                           leashed)
 
 
@@ -164,10 +159,10 @@ def get_stats(card=mw.reviewer.card, new_answer=None, prev_card_factor=None):
     if rep_list is None or len(rep_list) < 1:
         success_rate = target
     else:
-        success_rate = ease_calculator.get_success_rate(rep_list,
+        success_rate = get_success_rate(rep_list,
                                                       weight, init=target)
     if factor_list and len(factor_list) > 0:
-        average_ease = ease_calculator.moving_average(factor_list, weight)
+        average_ease = moving_average(factor_list, weight)
     else:
         if config_settings['starting_ease_factor'] is None:
             config_settings['starting_ease_factor'] = get_starting_ease(card)
@@ -226,9 +221,13 @@ def get_stats(card=mw.reviewer.card, new_answer=None, prev_card_factor=None):
 def display_stats(new_answer=None, prev_card_factor=None):
     card = mw.reviewer.card
     msg = get_stats(card, new_answer, prev_card_factor)
-    tooltip_args = {'msg': msg, 'period': stats_duration}
-    if semver.Version(version) > semver.Version("2.1.30"):
-        tooltip_args.update({'x_offset': 12, 'y_offset': 240})
+    tooltip_args = {
+        'msg': msg,
+        'period': stats_duration,
+        'x_offset': 12,
+        'y_offset': 240,
+    }
+
     tooltip(**tooltip_args)
 
 
